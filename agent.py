@@ -10,13 +10,13 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 64        # minibatch size
-GAMMA = 0.8            # discount factor
-TAU = 1e-3              # for soft update of target parameters
-LR_ACTOR = 1e-4         # learning rate of the actor 
+BATCH_SIZE = 128        # minibatch size
+GAMMA = 0.9            # discount factor
+TAU = 1e-2              # for soft update of target parameters
+LR_ACTOR = 1e-3         # learning rate of the actor 
 LR_CRITIC = 1e-3        # learning rate of the critic
 WEIGHT_DECAY = 0.9        # L2 weight decay
-TRAIN_EVERY = 10
+TRAIN_EVERY = 20
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -40,7 +40,6 @@ class Agent():
         self.state_list = deque(maxlen=self.step_window)
         self.state_act_list = deque(maxlen=self.step_window)
 
-
         # Actor Network (w/ Target Network)
         self.actor_local = Actor(state_size, action_size, random_seed).to(device)
         self.actor_target = Actor(state_size, action_size, random_seed).to(device)
@@ -49,7 +48,7 @@ class Agent():
         # Critic Network (w/ Target Network)
         self.critic_local = Critic(state_size, action_size, random_seed).to(device)
         self.critic_target = Critic(state_size, action_size, random_seed).to(device)
-        self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=LR_CRITIC) #, weight_decay=WEIGHT_DECAY)
+        self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
 
         # Noise process
         self.noise = OUNoise(action_size, random_seed)
@@ -73,11 +72,10 @@ class Agent():
         
         self.memory.add(list(self.state_list), action, reward, next_state, done)
 
-        ##Removed the learn IF     
         # Learn, if enough samples are available in memory
         self.steps += 1
-        if len(self.memory) > BATCH_SIZE and self.steps % TRAIN_EVERY == 0 :
-            for _ in range(5) :
+        if len(self.memory) > BATCH_SIZE and (self.steps % TRAIN_EVERY) == 0 :
+            for _ in range(7) :
                 experiences = self.memory.sample()
                 self.learn(experiences, GAMMA, update_target)
 
@@ -86,20 +84,18 @@ class Agent():
         #If not enough states to act with the NN, then return random action (maybe same last action?)
         #state has the last state of 20 agents
         self.state_act_list.append(state)
-        #When using a window of steps
         if len(self.state_act_list) != self.step_window :
             return np.clip(np.random.rand(20, self.action_size), -1, 1)
 
         #Convert the state array to tensor
         #state = torch.from_numpy(state).float().to(device)
         
-        
         self.actor_local.eval()
         
         with torch.no_grad():
             st = np.asarray([e for el in self.state_act_list for e in el], dtype=np.float32)
             st = torch.from_numpy(st).float().unsqueeze(0).to(device)
-            st = torch.reshape(st, (20, self.step_window * self.state_size)) #dense input [20, W*33]
+            st = torch.reshape(st, (20, self.step_window * self.state_size)) #dense input [20, 3*33]
             action_values = self.actor_local(st).cpu().data.numpy()
             
             #Input the state to the actor's local network (the regular) to get the "best" action
@@ -131,12 +127,10 @@ class Agent():
                 
         states, actions, rewards, next_states, dones = experiences
 
-        #Organize data so it fits the RNN at the network's input
-        states = torch.reshape(states, (BATCH_SIZE, self.state_size * self.step_window))
-        next_states = torch.cat((states, next_states), 1)[:,self.state_size:]
-        #next_states = torch.reshape(next_states, (BATCH_SIZE, self.step_window, self.state_size))
-        #states = torch.reshape(states, (BATCH_SIZE, self.step_window, self.state_size))
+        # states = torch.reshape(states, (BATCH_SIZE, self.state_size * self.step_window))
+        # next_states = torch.cat((states, next_states), 1)[:,self.state_size:]
         
+
         # ---------------------------- update critic ---------------------------- #
         # Get predicted next-state actions and Q values from target models
         # Get action from actor's network, given the NEXT state        
@@ -159,7 +153,7 @@ class Agent():
         critic_loss.backward()
         
         #Gradient clipping
-        torch.nn.utils.clip_grad_norm(self.critic_local.parameters(), 1)
+        torch.nn.utils.clip_grad_norm_(self.critic_local.parameters(), 1)
 
         self.critic_optimizer.step()
 
@@ -177,13 +171,13 @@ class Agent():
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         #Gradient clipping
-        torch.nn.utils.clip_grad_norm(self.actor_local.parameters(), 1)
+        torch.nn.utils.clip_grad_norm_(self.actor_local.parameters(), 1)
         self.actor_optimizer.step()
 
         # ----------------------- update target networks ----------------------- #
         if update_target :
             self.soft_update(self.critic_local, self.critic_target, TAU)
-            self.soft_update(self.actor_local, self.actor_target, TAU)                     
+            self.soft_update(self.actor_local, self.actor_target, TAU)
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
@@ -200,7 +194,7 @@ class Agent():
 class OUNoise:
     """Ornstein-Uhlenbeck process."""
 
-    def __init__(self, size, seed, mu=0., theta=0.1, sigma=0.07):
+    def __init__(self, size, seed, mu=0., theta=0.1, sigma=0.08):
         """Initialize parameters and noise process."""
         self.mu = mu * np.ones(size)
         self.theta = theta
