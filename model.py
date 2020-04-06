@@ -28,11 +28,11 @@ class Actor(nn.Module):
             fc2_units (int): Number of nodes in second hidden layer
         """
         super(Actor, self).__init__()
-        _input_layer = 300
-        _hidden_1 = 300
+        _input_layer = 128
+        _hidden_1 = 256
         self.seed = torch.manual_seed(seed)
         self.step_window = 1
-
+        
         self.fc1 = nn.Linear(self.step_window * state_size, _input_layer)
         self.fc2 = nn.Linear(_input_layer, _hidden_1)
         self.fc3 = nn.Linear(_hidden_1, action_size)
@@ -42,6 +42,7 @@ class Actor(nn.Module):
         
         #Dropout
         self.dpout = nn.Dropout(p=0.20)
+
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -54,7 +55,7 @@ class Actor(nn.Module):
         #If there are multiple windows, the state will have them already concatenated
         #Input layer
         x = self.fc1(state) 
-        x = self.bn_input(x)
+        #x = self.bn_input(x)
         x = F.relu(x)
 
         #First hidden layer Dense + Batchnorm + Relu
@@ -81,8 +82,8 @@ class Critic(nn.Module):
             fc2_units (int): Number of nodes in the second hidden layer
         """
         super(Critic, self).__init__()
-        _input_layer = 300
-        _hidden_1 = 300
+        _input_layer = 128
+        _hidden_1 = 256
         self.seed = torch.manual_seed(seed)
         self.step_window = 1
 
@@ -107,7 +108,7 @@ class Critic(nn.Module):
         #If there are multiple windows, the state will have them already concatenated
         #Input layer
         x = self.fcs1(state) 
-        x = self.bn_input(x)
+        #x = self.bn_input(x)
         x = F.relu(x)
 
         #First hidden layer Dense + Batchnorm + Relu
