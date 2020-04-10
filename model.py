@@ -53,17 +53,17 @@ class Actor(nn.Module):
     def forward(self, state):
         """Build an actor (policy) network that maps states -> actions."""
         #If there are multiple windows, the state will have them already concatenated
-        #Input layer
+        #Input layer: Dense + Batchnorm + ReLU
         x = self.fc1(state) 
         x = self.bn_input(x)
         x = F.relu(x)
 
-        #First hidden layer Dense + Batchnorm + Relu
+        #First hidden layer: Dense + ReLU
         x = self.fc2(x)
 #         x = self.bn_hidden(x)
         x = F.relu(x)
 
-        #Output layer
+        #Output layer: Dense  + Tanh
         x = self.fc3(x)
         out = torch.tanh(x)
         return out
@@ -106,18 +106,18 @@ class Critic(nn.Module):
     def forward(self, state, action):
         """Build a critic (value) network that maps (state, action) pairs -> Q-values."""
         #If there are multiple windows, the state will have them already concatenated
-        #Input layer
+        #Input layer: Dense + Batchnorm + ReLU
         x = self.fcs1(state) 
         x = self.bn_input(x)
         x = F.relu(x)
 
-        #First hidden layer Dense + Batchnorm + Relu
+        #First hidden layer Dense + ReLU
         #Concat state & action
         x = torch.cat((x, action), dim=1)
         x = self.fc2(x)
         x = F.relu(x)
 
-        #Output layer
+        #Output layer: Dense
         out = self.fc3(x)
         return out
 

@@ -16,8 +16,8 @@ TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-4         # learning rate of the actor 
 LR_CRITIC = 1e-3        # learning rate of the critic
 WEIGHT_DECAY = 0        # L2 weight decay
-TRAIN_EVERY = 20
-NUM_AGENTS = 20
+TRAIN_EVERY = 20        # How many iterations to wait before updating target networks
+NUM_AGENTS = 20         # How many agents are there in the environment
 
 device =  torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
