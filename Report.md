@@ -30,15 +30,15 @@ The DDPG algorithm was set to run up to 1000 episodes with at most 1000 iteratio
 - If the mean score of the last 100 episodes is 30 or more we've finished the training
 
 Other Hyperparameters were set as:
-BUFFER_SIZE = int(1e6)  # replay buffer size
-BATCH_SIZE = 128        # minibatch size
-GAMMA = 0.95            # discount factor
-TAU = 1e-3              # for soft update of target parameters
-LR_ACTOR = 1e-4         # learning rate of the actor 
-LR_CRITIC = 1e-3        # learning rate of the critic
-WEIGHT_DECAY = 0        # L2 weight decay
-TRAIN_EVERY = 20        # How many iterations to wait before updating target networks
-NUM_AGENTS = 20         # How many agents are there in the environment
+- BUFFER_SIZE = int(1e6)  # replay buffer size
+- BATCH_SIZE = 128        # minibatch size
+- GAMMA = 0.95            # discount factor
+- TAU = 1e-3              # for soft update of target parameters
+- LR_ACTOR = 1e-4         # learning rate of the actor 
+- LR_CRITIC = 1e-3        # learning rate of the critic
+- WEIGHT_DECAY = 0        # L2 weight decay
+- TRAIN_EVERY = 20        # How many iterations to wait before updating target networks
+- NUM_AGENTS = 20         # How many agents are there in the environment
 
 ### NN Model
 The Neural Network Architecture of the `Actor` is the following:
@@ -65,8 +65,9 @@ The rewards obtained during the agent training:
 
 ![Rewards](scores.png)
 
-The weights of the Actor network are included in this repository: [Actor](checkpoint_actor.pth)
-The weights of the Actor network are included in this repository: [Critic](checkpoint_critic.pth)
+### Saved model weights
+- The weights of the Actor network can be found here: [Actor](checkpoint_actor.pth)
+- The weights of the Actor network can be found here: [Critic](checkpoint_critic.pth)
 
 ### Future Work
 Although the requirement of +30 score was met, this doesnt look very well when you run the environment. +30 means it actually is away from the target ~70% of the time. So, to improve the agent's behavior, I'd say we could:
