@@ -31,15 +31,15 @@ class Actor(nn.Module):
         _input_layer = 128
         _hidden_1 = 256
         self.seed = torch.manual_seed(seed)
-        self.step_window = 1
         
-        self.fc1 = nn.Linear(self.step_window * state_size, _input_layer)
+        self.fc1 = nn.Linear(state_size, _input_layer)
         self.fc2 = nn.Linear(_input_layer, _hidden_1)
         self.fc3 = nn.Linear(_hidden_1, action_size)
         
         #batchnorm
         self.bn_input = nn.BatchNorm1d(_input_layer)
-        
+        self.bn_hidden = nn.BatchNorm1d(_hidden_1)
+
         #Dropout
         self.dpout = nn.Dropout(p=0.20)
 
@@ -55,16 +55,17 @@ class Actor(nn.Module):
         #If there are multiple windows, the state will have them already concatenated
         #Input layer
         x = self.fc1(state) 
-        #x = self.bn_input(x)
+        x = self.bn_input(x)
         x = F.relu(x)
 
         #First hidden layer Dense + Batchnorm + Relu
         x = self.fc2(x)
+#         x = self.bn_hidden(x)
         x = F.relu(x)
 
         #Output layer
         x = self.fc3(x)
-        out = F.tanh(x)
+        out = torch.tanh(x)
         return out
 
     
@@ -85,9 +86,8 @@ class Critic(nn.Module):
         _input_layer = 128
         _hidden_1 = 256
         self.seed = torch.manual_seed(seed)
-        self.step_window = 1
 
-        self.fcs1 = nn.Linear(self.step_window * state_size, _input_layer)
+        self.fcs1 = nn.Linear(state_size, _input_layer)
         self.fc2 = nn.Linear(_input_layer + action_size, _hidden_1) #concat the action from the actor
         self.fc3 = nn.Linear(_hidden_1, 1)
         
@@ -108,7 +108,7 @@ class Critic(nn.Module):
         #If there are multiple windows, the state will have them already concatenated
         #Input layer
         x = self.fcs1(state) 
-        #x = self.bn_input(x)
+        x = self.bn_input(x)
         x = F.relu(x)
 
         #First hidden layer Dense + Batchnorm + Relu
